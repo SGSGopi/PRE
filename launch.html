@@ -1,0 +1,261 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>PRE</title>
+    <link rel="shortcut icon" href="#" type="image/x-icon">
+    <!--Style Sheet-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <!-- Theme style -->
+    <link href="CSS/bootstrap.min.css" rel="stylesheet" />
+    <script src="Scripts/jquery-1.10.2.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+    
+</head>
+<body class="hold-transition login-page">
+    <div class="row" style="margin-top:30px">
+        <div class="col-md-3"></div>
+        <div class="col-md-5">
+            <div class="form-group has-feedback">
+                <input type="text" id="txtOrgId" class="form-control" name="org Id" placeholder="Org ID" autofocus maxlength="125" required data-required-msg="Org ID cannot be blank" >
+                <span> <i class="fa fa-building form-control-feedback"></i></span>
+            </div>
+            <div class="form-group has-feedback">
+                <input id="txtUserId" type="text" class="form-control" name="user Id" placeholder="User ID" required data-required-msg="User ID cannot be blank">
+                <span> <i class="fa fa-user form-control-feedback"></i></span>
+            </div>
+            <div class="form-group has-feedback">
+                <input id="txtPassword" type="password" class="form-control" name="password" placeholder="Password" required data-required-msg="Password cannot be blank">
+                <span> <i class="fa fa-key form-control-feedback"></i></span>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button id="btn_login" onclick="Login()" type="button" class="btn btn-primary" style="color:#fff;font-weight:bolder">LOGIN</button>
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="col-md-3"></div>
+    </div>   
+    <div id="APISection" style="display: none;">
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-5">
+                <div class="form-group has-feedback">
+                    <input type="text" id="txtYear" class="form-control" name="Year" placeholder="Year" autofocus maxlength="4" required data-required-msg="Year cannot be blank">
+                    <span> <i class="fa fa-calendar form-control-feedback"></i></span>
+                </div>
+                <div class="form-group has-feedback">
+                    <textarea id="txtDataTempalate" type="text" name="Data" rows="4" placeholder="Data Template" style="width: 100%;"></textarea>               
+                </div>
+                <div class="form-group has-feedback">
+                    <textarea id="txtData" type="text" name="Data" rows="4" placeholder="Data" style="width: 100%;"></textarea>               
+                </div>
+                
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <button id="btn_update" onclick="Update()" type="button" class="btn btn-success" style="color:#fff;font-weight:bolder">Update</button>
+                            <span id="responsetext"></span>
+                        </div>                    
+                    </div>
+                </div>            
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-5">
+                <div class="form-group has-feedback">
+                    <label class="radio-inline">
+                        <input type="radio" name="optradio" checked value="Years">Get Annual Data Years
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="optradio" value="Template">Get Annual Data Template
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="optradio" value="Data">Get Annual Data
+                    </label> 
+                    <label class="radio-inline">
+                        <input type="radio" name="optradio" value="SetData">Set Annual Data
+                    </label> 
+                </div>  
+                <div class="form-group has-feedback">
+                    <textarea id="txtResponse" type="text" name="Response" rows="4" placeholder="Response" style="width: 100%;"></textarea>               
+                </div>                
+                <div class="form-group" style="margin-top: 10px;">
+                    <div class="row">
+                        <div class="col-sm-2">
+                            <button id="btn_retrive" onclick="Retrive()" type="button" class="btn btn-info" style="color:#fff;font-weight:bolder">Retrive</button>
+                        </div>
+                        <div class="col-sm-2">
+                            <button id="btn_setdata" onclick="SetData()" type="button" class="btn btn-success" style="color:#fff;font-weight:bolder" disabled>Set Annual</button>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+            <div class="col-md-3"></div>
+        </div>   
+    </div>     
+    </body>
+</html>
+
+
+<script>
+
+$('input[type=radio][name=optradio]').change(function() {
+    if (this.value == 'SetData') {
+       $("#btn_setdata").removeAttr("disabled");
+       $("#btn_retrive").attr("disabled","disabled");
+    }
+    else {
+        $("#btn_setdata").attr("disabled","disabled");
+        $("#btn_retrive").removeAttr("disabled");
+    }
+});
+
+var weburl = "http://164.52.200.168:100";
+
+function Login(){
+    if($("#txtOrgId").val()==""){
+       return alert("Org ID cannot be blank");
+    }
+    if($("#txtUserId").val()==""){
+       return alert("User ID cannot be blank");
+    }
+    if($("#txtPassword").val()==""){
+       return alert("Password cannot be blank");
+    }
+    var data={};
+    data.org = $("#txtOrgId").val();
+    data.user = $("#txtUserId").val();
+    data.password = $("#txtPassword").val();
+    var sRequestUrl = weburl + '/server/AnnualData/ValidateCredentials.ashx?';
+    var result = ajaxcall_get(sRequestUrl,data);
+    var jsonObj = JSON.parse(result);
+    if(jsonObj.data.context.Response){
+        $("#txtPassword, .fa-key, #btn_login").hide();
+        $("#txtOrgId, #txtUserId").attr("disabled","disabled");
+        $("#APISection").show();
+    }else{
+        return alert("Credentials not valid");
+    }
+
+}
+
+function Update(){
+    if($("#txtYear").val()==""){
+       return alert("Year cannot be blank");
+    }
+    if($("#txtDataTempalate").val()==""){
+       return alert("Date Tempate cannot be blank");
+    }
+    if($("#txtData").val()==""){
+       return alert("Date cannot be blank");
+    }
+    
+    var header_data = {};
+    header_data.year = $("#txtYear").val();
+    header_data.datatemplate = $("#txtDataTempalate").val();
+    header_data.data = $("#txtData").val();
+    header_data.type = "Update";
+    var data={};
+    data.context = context();
+    data.context.org = $("#txtOrgId").val();
+    data.context.user = $("#txtUserId").val();
+    data.context.Header = header_data;
+    console.log(data);
+    var sRequestUrl = weburl + '/server/AnnualData/SaveAnnualData.ashx';
+    var result = ajaxcall_post(sRequestUrl,data);
+    var jsonObj = JSON.parse(result);
+    if(jsonObj.update == 'successful'){
+       $("#responsetext").text("Updated Successfully");
+    }else{
+        return alert(jsonObj.message);
+    }
+}
+
+function context() {
+    var context = {
+        org: 'PRE',
+        user: "admin"
+    };
+    return context;
+}
+
+function Retrive(){
+    if ($('input[type=radio][name=optradio]:checked').val() != "Years"){
+        if($("#txtYear").val() == ""){
+            alert("Year cannot be blank");
+        }
+    }
+    
+    var data={};
+    data.org = $("#txtOrgId").val();
+    data.user = $("#txtUserId").val();
+    data.year = $("#txtYear").val();
+    data.type = $('input[type=radio][name=optradio]:checked').val();
+    var sRequestUrl = weburl + '/server/AnnualData/GetAnnualData.ashx?';
+    var result = ajaxcall_get(sRequestUrl,data);
+    var jsonObj = JSON.parse(result)
+    $("#txtResponse").text(JSON.stringify(jsonObj.data.context.List))
+}
+
+function SetData(){
+    if($("#txtYear").val()==""){
+       return alert("Year cannot be blank");
+    }    
+    
+    var header_data = {};
+    header_data.year = $("#txtYear").val();
+    header_data.datatemplate = $("#txtDataTempalate").val();
+    header_data.data = $("#txtData").val();
+    header_data.type = "Annual";
+    var data={};
+    data.context = context();
+    data.context.org = $("#txtOrgId").val();
+    data.context.user = $("#txtUserId").val();
+    data.context.Header = header_data;
+    console.log(data);
+    var sRequestUrl = weburl + '/server/AnnualData/SaveAnnualData.ashx';
+    var result = ajaxcall_post(sRequestUrl,data);
+    var jsonObj = JSON.parse(result);
+    if(jsonObj.update == 'successful'){
+        $("#txtResponse").text("Annual Set Successfully");
+    }else{
+        return alert(jsonObj.message);
+    }
+}
+
+
+function ajaxcall_get(url, paramValue) {
+    var result = $.ajax({
+        url: url,
+        type: 'GET',
+        dataType: 'json',
+        data: paramValue,
+        contentType: 'application/json; charset=utf-8',
+        async: false
+    });
+   
+    return result.responseText;
+}
+
+function ajaxcall_post(url, paramValue) {
+    var result = $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(paramValue), 
+        async: false
+    });
+    return result.responseText;
+}
+
+
+</script>
